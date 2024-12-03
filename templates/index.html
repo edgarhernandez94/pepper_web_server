@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pepper Control Panel</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f0f4f8;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-radius: 10px 10px 0 0;
+            font-size: 18px;
+            padding: 10px 15px;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .btn {
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+        .status-section, .control-grid {
+            margin-top: 30px;
+        }
+        .slider-label {
+            font-weight: bold;
+        }
+        .preset-actions button {
+            margin-right: 10px;
+        }
+        .history-container ul {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .history-container ul li {
+            margin-bottom: 5px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 5px;
+        }
+        @media (max-width: 768px) {
+            .video-text-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            #videoStream {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pepper Control Panel</h1>
+
+        <!-- Camera and Text-to-Speech -->
+        <div class="card">
+            <div class="card-header">Camera and Text-to-Speech</div>
+            <div class="card-body video-text-container">
+                <img id="videoStream" src="{{ url_for('video_feed') }}" alt="Pepper Video" class="img-fluid" style="border: 1px solid #ddd; border-radius: 10px;">
+                <div class="text-to-speech">
+                    <h4>Text-to-Speech</h4>
+                    <div class="form-group">
+                        <input type="text" id="ttsText" placeholder="Type text for Pepper to speak" class="form-control">
+                    </div>
+                    <button class="btn btn-primary" onclick="sayText()">Speak</button>
+                    <div class="history-container">
+                        <h5>Speech History</h5>
+                        <ul id="ttsHistory"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preset Actions -->
+        <div class="card">
+            <div class="card-header">Preset Actions</div>
+            <div class="card-body preset-actions text-center">
+                <button class="btn btn-success" onclick="performAction('greet')">Greet</button>
+                <button class="btn btn-info" onclick="performAction('wave')">Wave</button>
+                <button class="btn btn-secondary" onclick="performAction('home')">Return to Home</button>
+                <button class="btn btn-warning" onclick="performAction('presentation')">Presentation</button>
+            </div>
+        </div>
+
+        <!-- Current Status -->
+        <div class="card status-section">
+            <div class="card-header">Current Status</div>
+            <div class="card-body row">
+                <div class="col-md-4">
+                    <h5>Head</h5>
+                    <p><strong>Yaw:</strong> <span id="statusHeadYaw">0</span></p>
+                    <p><strong>Pitch:</strong> <span id="statusHeadPitch">0</span></p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Right Arm</h5>
+                    <p><strong>Shoulder Pitch:</strong> <span id="statusRShoulderPitch">1.5</span></p>
+                    <p><strong>Shoulder Roll:</strong> <span id="statusRShoulderRoll">0</span></p>
+                    <p><strong>Elbow Yaw:</strong> <span id="statusRElbowYaw">1.0</span></p>
+                    <p><strong>Elbow Roll:</strong> <span id="statusRElbowRoll">0.5</span></p>
+                    <p><strong>Wrist Yaw:</strong> <span id="statusRWristYaw">0</span></p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Left Arm</h5>
+                    <p><strong>Shoulder Pitch:</strong> <span id="statusLShoulderPitch">1.5</span></p>
+                    <p><strong>Shoulder Roll:</strong> <span id="statusLShoulderRoll">0</span></p>
+                    <p><strong>Elbow Yaw:</strong> <span id="statusLElbowYaw">-1.0</span></p>
+                    <p><strong>Elbow Roll:</strong> <span id="statusLElbowRoll">-0.5</span></p>
+                    <p><strong>Wrist Yaw:</strong> <span id="statusLWristYaw">0</span></p>
+                </div>
+            </div>
+        </div>
+
+<!-- Joint Control Section -->
+<h2>Joint Control</h2>
+<div class="control-grid">
+    <!-- Head Control -->
+    <div class="control-card">
+        <h4>Head Control</h4>
+        <img src="path/to/head_image.png" alt="Head" style="width:80px; margin:10px auto; display:block;">
+        <div class="form-group">
+            <label>Yaw</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('HeadYaw', -0.1)">←</button>
+                <span id="HeadYawValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('HeadYaw', 0.1)">→</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Pitch</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('HeadPitch', -0.1)">↓</button>
+                <span id="HeadPitchValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('HeadPitch', 0.1)">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Arm Control -->
+    <div class="control-card">
+        <h4>Right Arm Control</h4>
+        <img src="path/to/right_arm_image.png" alt="Right Arm" style="width:80px; margin:10px auto; display:block;">
+        <div class="form-group">
+            <label>Shoulder Pitch</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('RShoulderPitch', -0.1)">↑</button>
+                <span id="RShoulderPitchValue" class="status-display">1.5</span>
+                <button class="btn btn-secondary" onclick="updateJoint('RShoulderPitch', 0.1)">↓</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Shoulder Roll</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('RShoulderRoll', -0.1)">←</button>
+                <span id="RShoulderRollValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('RShoulderRoll', 0.1)">→</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Elbow Yaw</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('RElbowYaw', -0.1)">←</button>
+                <span id="RElbowYawValue" class="status-display">1.0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('RElbowYaw', 0.1)">→</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Elbow Roll</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('RElbowRoll', -0.1)">↑</button>
+                <span id="RElbowRollValue" class="status-display">0.5</span>
+                <button class="btn btn-secondary" onclick="updateJoint('RElbowRoll', 0.1)">↓</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Wrist Yaw</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('RWristYaw', -0.1)">←</button>
+                <span id="RWristYawValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('RWristYaw', 0.1)">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Left Arm Control -->
+    <div class="control-card">
+        <h4>Left Arm Control</h4>
+        <img src="path/to/left_arm_image.png" alt="Left Arm" style="width:80px; margin:10px auto; display:block;">
+        <div class="form-group">
+            <label>Shoulder Pitch</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('LShoulderPitch', -0.1)">↑</button>
+                <span id="LShoulderPitchValue" class="status-display">1.5</span>
+                <button class="btn btn-secondary" onclick="updateJoint('LShoulderPitch', 0.1)">↓</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Shoulder Roll</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('LShoulderRoll', -0.1)">←</button>
+                <span id="LShoulderRollValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('LShoulderRoll', 0.1)">→</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Elbow Yaw</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('LElbowYaw', -0.1)">←</button>
+                <span id="LElbowYawValue" class="status-display">-1.0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('LElbowYaw', 0.1)">→</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Elbow Roll</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('LElbowRoll', -0.1)">↑</button>
+                <span id="LElbowRollValue" class="status-display">-0.5</span>
+                <button class="btn btn-secondary" onclick="updateJoint('LElbowRoll', 0.1)">↓</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Wrist Yaw</label>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="updateJoint('LWristYaw', -0.1)">←</button>
+                <span id="LWristYawValue" class="status-display">0</span>
+                <button class="btn btn-secondary" onclick="updateJoint('LWristYaw', 0.1)">→</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+        function updateJoint(jointName, delta) {
+            const currentValueElement = document.getElementById(jointName + "Value");
+            let currentValue = parseFloat(currentValueElement.innerText);
+            currentValue = Math.max(Math.min(currentValue + delta, 2.0857), -2.0857);
+            currentValueElement.innerText = currentValue.toFixed(1);
+
+            fetch('/move_joint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ joint: jointName, angle: currentValue, speed: 0.2 })
+            }).then(response => response.json())
+              .then(() => {
+                  const statusField = document.getElementById("status" + jointName);
+                  if (statusField) {
+                      statusField.innerText = currentValue.toFixed(1);
+                  }
+              })
+              .catch(error => console.error("Error updating joint:", error));
+        }
+
+        function sayText() {
+            const text = document.getElementById('ttsText').value;
+            fetch('/say', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            }).then(response => response.json())
+              .then(data => {
+                  const historyList = document.getElementById('ttsHistory');
+                  const newEntry = document.createElement('li');
+                  newEntry.innerText = text;
+                  historyList.appendChild(newEntry);
+              })
+              .catch(error => console.error("Error in text-to-speech:", error));
+        }
+
+        function performAction(action) {
+            fetch('/perform_action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            }).then(response => response.json())
+              .catch(error => console.error("Error performing action:", error));
+        }
+    </script>
+</body>
+</html>
