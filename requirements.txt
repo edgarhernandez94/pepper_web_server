@@ -1,0 +1,4 @@
+flask
+flask-limiter
+Pillow
+qi  # Specific to Pepper's NAOqi framework
