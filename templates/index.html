@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pepper Control Dashboard</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             padding: 20px;
-            background-color: #f0f4f8;
+            background-color: #f5f5f5;
             font-family: Arial, sans-serif;
         }
         h1 {
@@ -28,12 +30,18 @@
             background: #fff;
         }
         .card-header {
-            background-color: #007bff;
+            background-color: #333;
             color: white;
             border-radius: 10px 10px 0 0;
-            font-size: 16px;
+            font-size: 18px;
             padding: 10px;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-header i {
+            margin-right: 10px;
         }
         .card-body {
             padding: 15px;
@@ -41,24 +49,49 @@
         .btn {
             border-radius: 5px;
             margin: 5px;
-        }
-        .preset-actions {
             display: flex;
-            justify-content: space-around;
             align-items: center;
+            justify-content: center;
+        }
+        .btn i {
+            margin-right: 8px;
+        }
+        .preset-actions, .joint-control-buttons {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .preset-actions .btn, .joint-control-buttons .btn {
+            flex: 1;
+            min-width: 120px;
         }
         .slider-group {
             margin-bottom: 15px;
         }
-        .status-indicator {
+        .status-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
             margin-bottom: 10px;
         }
-        .icon-large {
-            font-size: 24px;
-            margin-right: 10px;
+        .status-card i {
+            font-size: 30px;
+        }
+        .chart-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+        /* Nuevos estilos para agrandar las cámaras */
+        .video-feed img {
+            width: 100%;
+            height: auto;
+            max-height: 400px; /* Ajusta este valor según tus necesidades */
+            object-fit: cover;
         }
         @media (max-width: 768px) {
             .btn {
@@ -68,65 +101,77 @@
     </style>
 </head>
 <body>
-    <h1>Pepper Control Dashboard</h1>
+    <h1><i class="fas fa-robot"></i> Pepper Control Dashboard</h1>
     <div class="dashboard">
-        <!-- Robot State -->
+        <!-- Video Feed -->
         <div class="card">
-            <div class="card-header">Robot State</div>
-            <div class="card-body">
-                <div class="status-indicator">
-                    <span><i class="icon-large text-success">&#9679;</i><strong>Status:</strong> Online</span>
-                </div>
-                <div class="status-indicator">
-                    <span><i class="icon-large">&#128267;</i><strong>Battery:</strong> 85%</span>
-                </div>
-                <div class="status-indicator">
-                    <span><i class="icon-large">&#128293;</i><strong>Temperature:</strong> Normal</span>
-                </div>
+            <div class="card-header"><i class="fas fa-video"></i> Live Camera Feed</div>
+            <div class="card-body text-center video-feed">
+                <!-- Primera cámara -->
+                <h6>Main Camera</h6>
+                <img id="videoStream1" src="{{ url_for('video_feed') }}" alt="Main Camera" class="img-fluid rounded mb-3">
+                
+                <!-- Segunda cámara -->
+                <h6>Secondary Camera</h6>
+                <img id="videoStream2" src="http://14.10.2.192:8079/video_feed3" alt="Secondary Camera" class="img-fluid rounded">
             </div>
         </div>
 
-        <!-- Video Feed -->
+        <!-- Robot State -->
         <div class="card">
-            <div class="card-header">Live Camera Feed</div>
+            <div class="card-header"><i class="fas fa-info-circle"></i> Robot State</div>
             <div class="card-body">
-                <img id="videoStream" src="{{ url_for('video_feed') }}" alt="Pepper Video" class="img-fluid">
+                <div class="status-card">
+                    <span><strong>Status:</strong> Online</span>
+                    <i class="fas fa-circle text-success"></i>
+                </div>
+                <div class="status-card">
+                    <span><strong>Battery:</strong> 85%</span>
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+                <div class="status-card">
+                    <span><strong>Temperature:</strong> Normal</span>
+                    <i class="fas fa-thermometer-half"></i>
+                </div>
+                <div class="status-card">
+                    <span><strong>Latency:</strong> 30ms</span>
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div class="status-card">
+                    <span><strong>Connectivity:</strong> Stable</span>
+                    <i class="fas fa-wifi"></i>
+                </div>
             </div>
         </div>
 
         <!-- Preset Actions -->
         <div class="card">
-            <div class="card-header">Preset Actions</div>
+            <div class="card-header"><i class="fas fa-play-circle"></i> Preset Actions</div>
             <div class="card-body preset-actions">
                 <button class="btn btn-success" onclick="performAction('greet')">
-                    <i class="icon-large">&#128075;</i><br>Greet
+                    <i class="fas fa-hand-paper"></i> Greet
                 </button>
                 <button class="btn btn-info" onclick="performAction('presentation')">
-                    <i class="icon-large">&#127916;</i><br>Presentation
+                    <i class="fas fa-chalkboard-teacher"></i> Presentation
                 </button>
                 <button class="btn btn-secondary" onclick="performAction('home')">
-                    <i class="icon-large">&#127968;</i><br>Home
+                    <i class="fas fa-home"></i> Home
                 </button>
             </div>
         </div>
 
-        <!-- Audio Streaming Section -->
+        <!-- Joint Control -->
         <div class="card">
-            <div class="card-header">Audio Streaming</div>
-            <div class="card-body text-center">
-                <button class="btn btn-primary" onclick="startAudio()">Start Audio</button>
-                <button class="btn btn-danger" onclick="stopAudio()">Stop Audio</button>
-                <audio id="audioPlayer" controls autoplay class="mt-3" style="width: 100%;"></audio>
-            </div>
-        </div>
-
-    
-        <!-- Joint Control (Sliders) -->
-        <div class="card">
-            <div class="card-header">Joint Control (Sliders)</div>
+            <div class="card-header"><i class="fas fa-sliders-h"></i> Joint Control</div>
             <div class="card-body">
+                <h5><i class="fas fa-head-side"></i> Head Control</h5>
+                <div class="joint-control-buttons">
+                    <button class="btn btn-secondary" onclick="moveJoint('HeadYaw', -0.1)">← Yaw</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('HeadYaw', 0.1)">→ Yaw</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('HeadPitch', -0.1)">↓ Pitch</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('HeadPitch', 0.1)">↑ Pitch</button>
+                </div>
                 <div class="slider-group">
-                    <h5>Head</h5>
                     <label for="HeadYawSlider">Yaw</label>
                     <input type="range" id="HeadYawSlider" min="-2.0857" max="2.0857" step="0.01" value="0" 
                         oninput="syncJointSlider('HeadYaw', this.value)" class="form-control-range">
@@ -134,98 +179,392 @@
                     <input type="range" id="HeadPitchSlider" min="-2.0857" max="2.0857" step="0.01" value="0"
                         oninput="syncJointSlider('HeadPitch', this.value)" class="form-control-range">
                 </div>
+
+                <h5><i class="fas fa-robot"></i> Right Arm Control</h5>
+                <div class="joint-control-buttons">
+                    <button class="btn btn-secondary" onclick="moveJoint('RShoulderPitch', -0.1)">↑ Shoulder</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('RShoulderPitch', 0.1)">↓ Shoulder</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('RElbowYaw', -0.1)">← Elbow</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('RElbowYaw', 0.1)">→ Elbow</button>
+                </div>
                 <div class="slider-group">
-                    <h5>Right Arm</h5>
-                    <label for="RShoulderPitchSlider">Shoulder Pitch</label>
+                    <label for="RShoulderPitchSlider">Right Shoulder Pitch</label>
                     <input type="range" id="RShoulderPitchSlider" min="-2.0857" max="2.0857" step="0.01" value="1.5" 
                         oninput="syncJointSlider('RShoulderPitch', this.value)" class="form-control-range">
-                    <label for="RElbowYawSlider">Elbow Yaw</label>
+                    <label for="RElbowYawSlider">Right Elbow Yaw</label>
                     <input type="range" id="RElbowYawSlider" min="-2.0857" max="2.0857" step="0.01" value="1.0" 
                         oninput="syncJointSlider('RElbowYaw', this.value)" class="form-control-range">
                 </div>
+
+                <h5><i class="fas fa-robot"></i> Left Arm Control</h5>
+                <div class="joint-control-buttons">
+                    <button class="btn btn-secondary" onclick="moveJoint('LShoulderPitch', -0.1)">↑ Shoulder</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('LShoulderPitch', 0.1)">↓ Shoulder</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('LElbowYaw', -0.1)">← Elbow</button>
+                    <button class="btn btn-secondary" onclick="moveJoint('LElbowYaw', 0.1)">→ Elbow</button>
+                </div>
                 <div class="slider-group">
-                    <h5>Left Arm</h5>
-                    <label for="LShoulderPitchSlider">Shoulder Pitch</label>
+                    <label for="LShoulderPitchSlider">Left Shoulder Pitch</label>
                     <input type="range" id="LShoulderPitchSlider" min="-2.0857" max="2.0857" step="0.01" value="1.5" 
                         oninput="syncJointSlider('LShoulderPitch', this.value)" class="form-control-range">
-                    <label for="LElbowYawSlider">Elbow Yaw</label>
+                    <label for="LElbowYawSlider">Left Elbow Yaw</label>
                     <input type="range" id="LElbowYawSlider" min="-2.0857" max="2.0857" step="0.01" value="-1.0" 
                         oninput="syncJointSlider('LElbowYaw', this.value)" class="form-control-range">
                 </div>
             </div>
         </div>
 
-        <!-- Joint Control (Buttons) -->
+        <!-- Text-to-Speech -->
         <div class="card">
-            <div class="card-header">Joint Control (Buttons)</div>
+            <div class="card-header"><i class="fas fa-comment"></i> Text-to-Speech</div>
+            <div class="card-body">
+                <input type="text" id="ttsText" placeholder="Type something for Pepper to say" class="form-control mb-2">
+                <button class="btn btn-primary btn-block" onclick="sayText()">
+                    <i class="fas fa-play"></i> Speak
+                </button>
+                <div class="history-container mt-3">
+                    <h5><i class="fas fa-history"></i> Speech History</h5>
+                    <ul id="ttsHistory" class="list-group"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Streaming Section -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-microphone"></i> Audio Streaming</div>
             <div class="card-body text-center">
-                <h5>Head</h5>
-                <button class="btn btn-secondary" onclick="moveJoint('HeadYaw', -0.1)">← Yaw</button>
-                <button class="btn btn-secondary" onclick="moveJoint('HeadYaw', 0.1)">→ Yaw</button>
-                <button class="btn btn-secondary" onclick="moveJoint('HeadPitch', -0.1)">↓ Pitch</button>
-                <button class="btn btn-secondary" onclick="moveJoint('HeadPitch', 0.1)">↑ Pitch</button>
-                <h5>Right Arm</h5>
-                <button class="btn btn-secondary" onclick="moveJoint('RShoulderPitch', -0.1)">↑ Shoulder</button>
-                <button class="btn btn-secondary" onclick="moveJoint('RShoulderPitch', 0.1)">↓ Shoulder</button>
-                <button class="btn btn-secondary" onclick="moveJoint('RElbowYaw', -0.1)">← Elbow</button>
-                <button class="btn btn-secondary" onclick="moveJoint('RElbowYaw', 0.1)">→ Elbow</button>
-                <h5>Left Arm</h5>
-                <button class="btn btn-secondary" onclick="moveJoint('LShoulderPitch', -0.1)">↑ Shoulder</button>
-                <button class="btn btn-secondary" onclick="moveJoint('LShoulderPitch', 0.1)">↓ Shoulder</button>
-                <button class="btn btn-secondary" onclick="moveJoint('LElbowYaw', -0.1)">← Elbow</button>
-                <button class="btn btn-secondary" onclick="moveJoint('LElbowYaw', 0.1)">→ Elbow</button>
+                <button class="btn btn-primary" onclick="startAudio()"><i class="fas fa-play"></i> Start Audio</button>
+                <button class="btn btn-danger" onclick="stopAudio()"><i class="fas fa-stop"></i> Stop Audio</button>
+                <audio id="audioPlayer" controls autoplay class="mt-3 w-100"></audio>
+            </div>
+        </div>
+
+        <!-- Code Editor Section -->
+        <div class="card">
+            <div class="card-header"><i class="fas fa-terminal"></i> Python Interpreter</div>
+            <div class="card-body">
+                <textarea id="pythonCode" rows="5" class="form-control mb-3" placeholder="Write your Python code here..."></textarea>
+                
+                <!-- Reemplazo del Dropdown por un Select y un Botón -->
+                <div class="form-group mb-3">
+                    <label for="exampleSelect"><i class="fas fa-terminal"></i> Choose an Example:</label>
+                    <div class="input-group">
+                        <select id="exampleSelect" class="form-control">
+                            <option value="">--Select an Example--</option>
+                            <option value="Greet">Greet</option>
+                            <option value="Wave Hand">Wave Hand</option>
+                            <option value="Move to Home Position">Move to Home Position</option>
+                            <option value="Custom Speech">Custom Speech</option>
+                            <option value="Test degree of freedom">Test degree of freedom</option> <!-- Nuevo Ejemplo -->
+                        </select>
+                        <div class="input-group-append">
+                            <button class="btn btn-secondary" type="button" onclick="loadSelectedExample()">
+                                Load Example
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fin del Reemplazo -->
+
+                <button class="btn btn-primary btn-block mb-3" onclick="executePython()">
+                    <i class="fas fa-play"></i> Run Code
+                </button>
+                <div id="pythonOutput">
+                    <h5>Output:</h5>
+                    <pre id="outputConsole" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;"></pre>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Incluye las dependencias de Bootstrap y jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" 
+        integrity="sha256-DfXdz2hxCZT6N0rNfZ6EUiQuhiU65LNTL71uMd1CEMc=" crossorigin="anonymous"></script>
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-LtrjvnR4Twt/qOuYlYx2ePhn9sF9O08EnlwOAg4FZNAJL+7AdTP5H7d5OJYqE9EZ" 
+        crossorigin="anonymous"></script>
+
     <script>
+        // Text-to-Speech Functionality
+        function sayText() {
+            const text = document.getElementById('ttsText').value;
+            if (!text.trim()) {
+                alert("Please enter some text for Pepper to say.");
+                return;
+            }
+            fetch('/say', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      const historyList = document.getElementById('ttsHistory');
+                      const newEntry = document.createElement('li');
+                      newEntry.className = 'list-group-item';
+                      newEntry.innerText = text;
+                      historyList.appendChild(newEntry);
+                  } else {
+                      alert(`Error: ${data.message}`);
+                  }
+              }).catch(error => {
+                  console.error(error);
+                  alert("An error occurred while trying to make Pepper speak.");
+              });
+        }
+
+        // Audio Functions
+        function startAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = '/audio_feed'; 
+            audioPlayer.play().catch(error => {
+                console.error(error);
+                alert("Unable to start audio streaming.");
+            });
+        }
+
+        function stopAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.pause();
+            audioPlayer.src = '';
+        }
+
+        // Función para Mover Articulaciones al Presionar Botones
+        function moveJoint(joint, delta) {
+            const slider = document.getElementById(`${joint}Slider`);
+            let newValue = parseFloat(slider.value) + delta;
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            newValue = Math.max(min, Math.min(max, newValue));
+            slider.value = newValue.toFixed(2);
+            syncJointSlider(joint, newValue);
+        }
+
+        // Función para ejecutar Python
+        function executePython() {
+            const code = document.getElementById('pythonCode').value;
+            if (!code.trim()) {
+                alert("Please enter some Python code to execute.");
+                return;
+            }
+            fetch('/execute_python', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputConsole = document.getElementById('outputConsole');
+                if (data.status === 'success') {
+                    outputConsole.textContent = "Code executed successfully.";
+                } else {
+                    outputConsole.textContent = `Error: ${data.message}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while executing the Python code.");
+            });
+        }
+
+        // Función para ejecutar Ejemplos
+        function loadExample(example) {
+            const examples = {
+                "Greet": `
+# Make Pepper say hello and wave
+tts_service.say("Hello! I am Pepper, nice to meet you!")
+motion_service.setAngles("RShoulderPitch", 0.5, 0.1)
+motion_service.setAngles("RElbowYaw", -0.5, 0.1)
+motion_service.setAngles("RHand", 1.0, 0.1)  # Open hand
+                `,
+                "Wave Hand": `
+# Make Pepper wave its hand
+motion_service.setAngles("RShoulderPitch", 0.5, 0.1)
+motion_service.setAngles("RElbowYaw", -0.5, 0.1)
+motion_service.setAngles("RHand", 1.0, 0.1)  # Open hand
+time.sleep(1)
+motion_service.setAngles("RShoulderPitch", -0.5, 0.1)
+motion_service.setAngles("RHand", 0.0, 0.1)  # Close hand
+                `,
+                "Move to Home Position": `
+# Move Pepper to its default home position
+motion_service.rest()
+time.sleep(2)
+motion_service.wakeUp()
+                `,
+                "Custom Speech": `
+# Make Pepper say a custom message
+tts_service.say("This is an example of custom speech from the interpreter!")
+                `,
+                "Test degree of freedom": `
+# Test Pepper's degrees of freedom
+
+# HeadYaw
+motion_service.setAngles("HeadYaw", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("HeadYaw", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("HeadYaw", 0.0, 0.1)
+time.sleep(1)
+
+# HeadPitch
+motion_service.setAngles("HeadPitch", 0.5, 0.1)
+time.sleep(1)
+motion_service.setAngles("HeadPitch", -0.5, 0.1)
+time.sleep(1)
+motion_service.setAngles("HeadPitch", 0.0, 0.1)
+time.sleep(1)
+
+# LShoulderPitch
+motion_service.setAngles("LShoulderPitch", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LShoulderPitch", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LShoulderPitch", 0.0, 0.1)
+time.sleep(1)
+
+# LShoulderRoll
+motion_service.setAngles("LShoulderRoll", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LShoulderRoll", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LShoulderRoll", 0.0, 0.1)
+time.sleep(1)
+
+# LElbowYaw
+motion_service.setAngles("LElbowYaw", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LElbowYaw", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LElbowYaw", 0.0, 0.1)
+time.sleep(1)
+
+# LElbowRoll
+motion_service.setAngles("LElbowRoll", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LElbowRoll", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LElbowRoll", 0.0, 0.1)
+time.sleep(1)
+
+# LWristYaw
+motion_service.setAngles("LWristYaw", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LWristYaw", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("LWristYaw", 0.0, 0.1)
+time.sleep(1)
+
+# RShoulderPitch
+motion_service.setAngles("RShoulderPitch", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RShoulderPitch", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RShoulderPitch", 0.0, 0.1)
+time.sleep(1)
+
+# RShoulderRoll
+motion_service.setAngles("RShoulderRoll", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RShoulderRoll", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RShoulderRoll", 0.0, 0.1)
+time.sleep(1)
+
+# RElbowYaw
+motion_service.setAngles("RElbowYaw", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RElbowYaw", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RElbowYaw", 0.0, 0.1)
+time.sleep(1)
+
+# RElbowRoll
+motion_service.setAngles("RElbowRoll", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RElbowRoll", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RElbowRoll", 0.0, 0.1)
+time.sleep(1)
+
+# RWristYaw
+motion_service.setAngles("RWristYaw", 1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RWristYaw", -1.0, 0.1)
+time.sleep(1)
+motion_service.setAngles("RWristYaw", 0.0, 0.1)
+time.sleep(1)
+                `
+            };
+
+            const codeArea = document.getElementById('pythonCode');
+            if (examples[example]) {
+                codeArea.value = examples[example].trim();
+            } else {
+                codeArea.value = "# Example not found.";
+            }
+        }
+
+        // Función para cargar el ejemplo seleccionado desde el select
+        function loadSelectedExample() {
+            const select = document.getElementById('exampleSelect');
+            const selected = select.value;
+            if (selected) {
+                loadExample(selected);
+            } else {
+                alert("Please select an example to load.");
+            }
+        }
+
+        // Función para Sincronizar los Sliders
+        function syncJointSlider(joint, value) {
+            const data = {
+                joint: joint,
+                angle: parseFloat(value),
+                speed: 0.1 
+            };
+
+            fetch('/move_joint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    alert(`Error: ${data.message}`);
+                } else {
+                    console.log(`Moved joint ${joint} to angle ${value}`);
+                }
+            })
+            .catch(error => {
+                console.error(`Error moving joint ${joint}:`, error);
+                alert(`An error occurred while moving joint ${joint}.`);
+            });
+        }
+
+        // Función para Acciones Predefinidas
         function performAction(action) {
             fetch('/perform_action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action })
-            }).catch(console.error);
+                body: JSON.stringify({ action: action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    alert(`Error: ${data.message}`);
+                } else {
+                    console.log(`Performed action: ${action}`);
+                }
+            })
+            .catch(error => {
+                console.error(`Error performing action ${action}:`, error);
+                alert(`An error occurred while performing action ${action}.`);
+            });
         }
-
-        function moveJoint(joint, delta) {
-            const slider = document.getElementById(`${joint}Slider`);
-            if (slider) {
-                const newValue = parseFloat(slider.value) + delta;
-                slider.value = newValue.toFixed(2);
-                syncJointSlider(joint, newValue);
-            }
-        }
-
-        function syncJointSlider(joint, value) {
-            fetch('/move_joint', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ joint, angle: parseFloat(value), speed: 0.2 })
-            }).catch(console.error);
-        }
-
-        let audioPlayer = document.getElementById("audioPlayer");
-    let audioStreaming = false;
-
-    function startAudio() {
-        if (audioStreaming) return;
-        audioPlayer.src = "/audio_feed";
-        audioPlayer.play().then(() => {
-            audioStreaming = true;
-        }).catch(error => {
-            console.error("Error starting audio:", error);
-            audioStreaming = false;
-        });
-    }
-
-    function stopAudio() {
-        if (!audioStreaming) return;
-        audioPlayer.pause();
-        audioPlayer.src = "";
-        fetch("/stop_audio", { method: "POST" }).then(() => {
-            audioStreaming = false;
-        }).catch(error => console.error("Error stopping audio:", error));
-    }
     </script>
 </body>
 </html>
